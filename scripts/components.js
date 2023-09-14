@@ -1,20 +1,185 @@
+class CustomElement {
+    #tagName;
+
+    constructor(id, className, tagName = undefined) {
+        this.id = id
+        this.className = className
+        this.#tagName = tagName
+        this.element = document.createElement( this.#tagName )
+        !!id && this.element.setAttribute( "id", id )
+        !!className && this.element.setAttribute( "class", className )
+    }
+
+
+    add(element) {
+        if (element instanceof CustomElement) {
+            this.element.appendChild( element.render() )
+        } else {
+            this.element.appendChild( element )
+        }
+        // this.element.appendChild( element )
+        return this
+    }
+
+    text(string) {
+        this.element.innerText = string
+        return this
+    }
+
+    render() {
+        return this.element
+    }
+}
+
+class P extends CustomElement {
+    constructor(id, className, tagName = "p") {
+        super( id, className, tagName );
+    }
+
+    add(element) {
+        throw new Error( "Нельзя" )
+    }
+}
+
+class Div extends CustomElement {
+    constructor(id, className) {
+        super( id, className, "div" );
+    }
+}
+
+class Input extends CustomElement {
+    constructor(id, className, type, name, value) {
+        super( id, className, "input" );
+        this.type = type
+        this.name = name
+        this.value = value
+        !!type && this.element.setAttribute( "type", this.type )
+        !!name && this.element.setAttribute( "name", this.name )
+        !!value && this.element.setAttribute( "value", this.value )
+    }
+}
+
+class InlineText extends P {
+    constructor(id, className, tagName) {
+        super( id, className, tagName );
+    }
+
+}
+
+class FormLabel extends CustomElement {
+    constructor(id, className) {
+        super( id, className, "label" );
+    }
+
+    text(string) {
+        this.element.insertAdjacentText( "beforeend", string )
+        return this
+    }
+}
+
+class FormInput extends CustomElement {
+    constructor(id, className, name, label, value, type) {
+        super( id, "", "input" );
+        this.type = type
+        this.label = label
+        this.name = name
+        this.value = value
+        this.className = className
+        !!type && this.element.setAttribute( "type", type )
+        !!name && this.element.setAttribute( "name", name )
+        !!value && this.element.setAttribute( "value", value )
+
+        // Instance variable to store the onChange callback
+        this.onChangeCallback = null;
+
+        this.element.addEventListener( "input", this.handleInputChange.bind( this ) )
+    }
+
+    onChange(callback) {
+        this.onChangeCallback = callback;
+        return this
+    }
+
+    handleInputChange(event) {
+        // Call the onChange callback if it is set
+        if (typeof this.onChangeCallback === "function") {
+            this.onChangeCallback( event );
+        }
+    }
+
+    render() {
+        return super.render()
+    }
+}
+
+class RadioInput extends FormInput {
+    constructor(id, className, name, label, value) {
+        super( id, "mui-radio", name, label, value, "radio" );
+    }
+
+    render() {
+        return div( { className: this.className } )
+            .add(
+                formLabel()
+                    .add( super.render() )
+                    .text( this.label )
+            ).render()
+    }
+
+}
+
+class TextField extends FormInput {
+    constructor(id, className, name, label, value = "") {
+        super( id, "mui-textfield mui-textfield--float-label", name, label, value, "text" );
+    }
+
+    render() {
+        return div( { className: this.className } )
+            .add( super.render() )
+            .add( formLabel().text( this.label ) )
+            .render()
+    }
+}
+
+class CheckBox extends FormInput {
+    constructor(id, className, name, label, checked = false) {
+        super( id, "mui-checkbox", name, label, null, "checkbox" );
+        this.checked = checked
+        !!checked && this.element.setAttribute( "checked", checked )
+    }
+
+    render() {
+        return div( { className: this.className } )
+            .add(
+                formLabel()
+                    .add( super.render() )
+                    .text( this.label )
+            ).render()
+    }
+}
+
+
 /**
  * Create and return a div element with the specified id and class.
  *
  * @param {null|string} id - The id attribute for the div element.
  * @param {null|string} className - The class attribute for the div element.
- * @returns {HTMLDivElement} - The created div element.
+ * @returns {CustomElement} - The created div element.
  */
-const div = ({ id=null, className=null }) => {
-    // Create a <div> element.
-    const divElement = document.createElement('div');
-    
-    // Set the id and class name attributes.
-    divElement.id = id;
-    divElement.className = className;
+const div = ({ id = null, className = null } = {}) => {
+    return new Div( id, className )
+}
 
-    // Return the created <div> element.
-    return divElement;
+const p = ({ id, className } = {}) => {
+    return new P( id, className )
+}
+
+const SubTitle = ({ id, className } = {}) => {
+    return new InlineText( id, className, "h4" )
+}
+
+const formLabel = ({ id, className } = {}) => {
+    return new FormLabel( id, className )
 }
 
 /**
@@ -24,21 +189,20 @@ const div = ({ id=null, className=null }) => {
  * @param {string} name - The name attribute for the input element.
  * @param {string} id - The id attribute for the input element.
  * @param {string} value - The value attribute for the input element.
- * @returns {HTMLInputElement} - The created input element.
+ * @returns {CustomElement} - The created input element.
  */
-const Input = ({ type, name, id, value }) => {
+const input = (
+    {
+        type,
+        name,
+        id,
+        value
+    }
+) => {
     // Create an <input> element.
-    const inputElement = document.createElement("input");
-
-    // Set the type, name, id, and value attributes.
-    inputElement.type = type;
-    inputElement.name = name;
-    inputElement.id = id;
-    inputElement.value = value;
-
-    // Return the created <input> element.
-    return inputElement;
+    return new Input( id, null, type, name, value )
 }
 
-// Export the div and Input functions as named exports.
-export { div, Input };
+console.log( new FormInput() )
+
+export { div, input, p, SubTitle, FormLabel, RadioInput, TextField, CheckBox };

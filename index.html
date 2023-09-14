@@ -8,7 +8,30 @@
     <!-- load MUI https://www.muicss.com/docs/v1/css-js/forms -->
     <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
     <script src="//cdn.muicss.com/mui-0.10.3/js/mui.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="scripts/createFields.js"></script>
+    <style>
+        .field {
+            border: 1px solid black;
+            margin: 10px;
+        }
 
+        .field-header {
+            background-color: lightgray;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .name {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .field-body {
+            padding: 5px;
+        }
+    </style>
 </head>
 <body>
 <div id="testmap"></div>
@@ -29,8 +52,25 @@
         <div id="form-root">
         </div>
     </div>
+
+    <div>
+        <div class="field">
+            <div class="field-header">
+                <div class="name">Начальное условие</div>
+                <button class="and" style="margin-left: auto;" type="button">И</button>
+                <button class="or" style="margin-left: 5px" type="button">ИЛИ</button>
+                <button class="not" style="margin-left: 5px" type="button">НЕ</button>
+            </div>
+            <select style="margin-top: 10px; margin-left: 10px" id="first_elem_select">
+                <option value="">Выберите</option>
+            </select>
+            <div class="field-body"></div>
+        </div>
+    </div>
+
 </main>
 <script type="module" src="scripts/main.js"></script>
 
 </body>
+
 </html>

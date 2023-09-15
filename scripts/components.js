@@ -26,6 +26,14 @@ class CustomElement {
         return this
     }
 
+    style(stylesDict) {
+        const stringStyles = Object.keys( stylesDict ).map( style => {
+            return style + ":" + stylesDict[style]
+        } ).join( ';' )
+        this.element.setAttribute( "style", stringStyles )
+        return this
+    }
+
     render() {
         return this.element
     }
@@ -41,7 +49,7 @@ class P extends CustomElement {
     }
 }
 
-class Div extends CustomElement {
+export class Div extends CustomElement {
     constructor(id, className) {
         super( id, className, "div" );
     }
@@ -78,13 +86,14 @@ class FormLabel extends CustomElement {
 }
 
 class FormInput extends CustomElement {
-    constructor(id, className, name, label, value, type) {
-        super( id, "", "input" );
+    constructor(id, className, name, label, value, type, tagName = "input") {
+        super( id, "", tagName );
         this.type = type
         this.label = label
         this.name = name
         this.value = value
         this.className = className
+        this.listenToEvent = "input"
         !!type && this.element.setAttribute( "type", type )
         !!name && this.element.setAttribute( "name", name )
         !!value && this.element.setAttribute( "value", value )
@@ -92,7 +101,7 @@ class FormInput extends CustomElement {
         // Instance variable to store the onChange callback
         this.onChangeCallback = null;
 
-        this.element.addEventListener( "input", this.handleInputChange.bind( this ) )
+        this.element.addEventListener( this.listenToEvent, this.handleInputChange.bind( this ) )
     }
 
     onChange(callback) {
@@ -158,6 +167,68 @@ class CheckBox extends FormInput {
     }
 }
 
+class Button extends CustomElement {
+    constructor(id, className = "mui-btn") {
+        super( id, className, "button" );
+        // Instance variable to store the onClick callback
+        this.onChangeCallback = null;
+
+        this.element.addEventListener( "click", this.handleClick.bind( this ) )
+    }
+
+    onClick(callback) {
+        this.onClickCallback = callback;
+        return this
+    }
+
+    handleClick(event) {
+        // Call the onChange callback if it is set
+        if (typeof this.onClickCallback === "function") {
+            this.onClickCallback( event );
+        }
+    }
+
+
+    render() {
+        return super.render()
+    }
+}
+
+class SelectOption extends CustomElement {
+    constructor(id, className, value, label) {
+        super( id, className, "option" );
+        this.value = value
+        this.label = label
+        this.element.setAttribute( "value", value )
+        this.text( label )
+    }
+
+    render() {
+        return super.render();
+    }
+}
+
+class Select extends FormInput {
+    constructor(id, className, name, label, options = []) {
+        super( id, className, name, label, null, null, "select" );
+        this.name = name
+        this.label = label
+        this.options = options
+        this.defaultOption = new SelectOption(null, null, null, "-----")
+    }
+
+    render() {
+        console.log( "Select options", this.options )
+        this.add(this.defaultOption)
+
+        this.options.forEach( ([key, value]) => {
+            const option = new SelectOption( key, null, key, value )
+            this.add(option)
+        } )
+
+        return super.render()
+    }
+}
 
 /**
  * Create and return a div element with the specified id and class.
@@ -191,18 +262,9 @@ const formLabel = ({ id, className } = {}) => {
  * @param {string} value - The value attribute for the input element.
  * @returns {CustomElement} - The created input element.
  */
-const input = (
-    {
-        type,
-        name,
-        id,
-        value
-    }
-) => {
+const input = ({ type, name, id, value }) => {
     // Create an <input> element.
     return new Input( id, null, type, name, value )
 }
 
-console.log( new FormInput() )
-
-export { div, input, p, SubTitle, FormLabel, RadioInput, TextField, CheckBox };
+export { div, input, p, SubTitle, FormLabel, RadioInput, TextField, CheckBox, Button, Select };

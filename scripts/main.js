@@ -2,41 +2,54 @@
 Good module begins with docstring
 */
 
-import { Container, Typography } from "./components.js";
+import { Button, Container, Input, Typography } from "./components.js";
 
 
 const root = document.getElementById( "form-root" )
 
-let kek = 1
-const b = document.createElement( "button" )
-b.innerText = "Delete 2"
-b.addEventListener( "click", () => {
-    d.remove( p )
-} )
-
-root.appendChild(
-    b
-)
-
 const divStyles = {
     "padding": "16px",
-    "background-color": "rgba(181,181,181,0.3)"
+    "background-color": "rgba(181,181,181,0.3)",
+    "margin-top": "16px"
+}
+const pStyles = {
+    "padding-top": "16px"
 }
 
-const c = new Container()
-c.style( divStyles )
+const heading = new Typography( { variant: "h3", text: "Примеры" } )
+// or heading.text = "Примеры"
 
-const d = new Container()
-d.style( divStyles )
+const examples = new Container()
+examples.style( divStyles )
+examples.append( heading )
 
-const e = new Container()
-e.style( divStyles )
 
-const p = new Typography({variant: "h3",content: "Lorem"})
-p.onHover(() => console.log("c hover"))
+const inputHandler = (event) => {
+    const value = event.target.value
+    console.log( value )
+    output.text = value
+}
 
-c.append( p )
+const output = new Typography( { text: "Я изменюсь, обещаю" } ).style( pStyles )
+const inputExample = new Container()
+    .style( divStyles )
+    .append(
+        new Typography( { variant: "h4", text: "Метод onChange()" } ),
+        new Input( { value: "Измени меня" } ).onChange( inputHandler ),
+        output
+    )
+
+
+const buttonsExample = new Container()
+    .style( divStyles )
+    .append(
+        new Typography( { variant: "h4", text: "Кнопки" } ),
+        new Button().onClick(() => buttonsExample.append(output))
+    )
+
+examples.append( inputExample, buttonsExample )
+
 
 root.appendChild(
-    c.mount()
+    examples.mount()
 )

@@ -1,38 +1,43 @@
-/*
-Good module begins with docstring
-*/
+import { Button, Container, createRoot } from "./components.js";
+import { examples } from "./examples/examples.js";
+import { Box } from "./shotrhandComponents.js";
 
-import { Container, Typography } from "./components.js";
-import componentsSelectExample from "./examples/componentsCompositionSelectExample.js"
-import { divStyles } from "./examples/styles.js";
-import inputExample from "./examples/onChangeExample.js";
-import buttonsExample from "./examples/buttonsExample.js";
-import inputPropsExample from "./examples/inputProps.js";
-import selectFieldComponentExample from "./examples/selectFieldComponentExample.js";
-import { Box, box } from "./shotrhandComponents.js";
+const box = new Container() // Если убрать Container(), то у Box родитель будет не наш компонент, а html элемент.
+    // Будет баг - копии этого бокса. Дело, судя по всему, в #compose()
+    .append(
+        new Box()
+    )
 
-const root = document.getElementById( "form-root" )
-
-
-const heading = new Typography( { variant: "h3", text: "Примеры" } )
-// or heading.text = "Примеры"
-
-const examples = new Container()
-examples.style( divStyles )
-examples.append( heading )
-
-
-
-examples.append(
-    inputExample,
-    buttonsExample,
-    inputPropsExample,
-    componentsSelectExample,
-    selectFieldComponentExample,
-    new Box(),
-)
-
-
-root.appendChild(
+const examplesButton = new Button( { text: "Примеры >" } )
+const getExamples = () => {
+    console.log( "examples", examples.isMounted )
     examples.mount()
+    box.unmount()
+}
+examplesButton.onClick( getExamples )
+const formButton = new Button( { text: "< Форма" } )
+const getForm = () => {
+    console.log( "examples", examples.isMounted )
+    box.mount()
+    examples.unmount()
+}
+formButton.onClick( getForm )
+
+
+const nav = new Container().append( formButton, examplesButton )
+
+const container = document.getElementById( "root" )
+const root = createRoot( container )
+
+root.append(
+    nav,
+    examples,
+    box
 )
+
+console.log(box.parent)
+
+
+
+
+

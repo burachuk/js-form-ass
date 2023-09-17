@@ -8,15 +8,7 @@ export class Box extends Container {
         this.buttons = buttons
         this.selectField = selectField
         this.placeholder = new Container()
-        this.#compose()
-        this.style( {
-            "display": "flex",
-            "flex-direction": "column",
-            ...divStyles
-        } )
     }
-
-
 
     get #select() {
         const select = new SelectField( { options: optionsArray } )
@@ -26,17 +18,23 @@ export class Box extends Container {
     }
 
     get #buttons() {
-        const buttonsGroup = new Container()
-        buttonsGroup.id = "buttonsGroup"
-        const buttons = ["И", "ИЛИ", "НЕ", "X"].map( label => {
+        const createButtons = (label) => {
             const button = new Button( { text: label } )
-            button.className = "mui-btn mui-btn--small mui-btn--primary"
-            button.onClick( () => this.placeholder.text = label )
+            button.onClick( () => {
+                this.placeholder.text = label
+                this.placeholder.mount()
+            } )
             return button
+        };
+        const buttonsGroup = new Container()
+        let buttons;
+        buttons = ["И", "ИЛИ", "НЕ"].map( createButtons );
+        const removeButton = new Button( { text: "X" } )
+        removeButton.onClick( () => {
+            this.placeholder.unmount()
         } )
 
-        return buttonsGroup.append( ...buttons )
-
+        return buttonsGroup.append( ...buttons ).append( removeButton )
     }
 
     get #form() {
@@ -45,12 +43,15 @@ export class Box extends Container {
         )
     }
 
-    get #logicOperationPlaceHolder() {
-        return this.placeholder.style( placeholderStyles )
-    }
-
     #compose() {
+        this.placeholder.style( placeholderStyles )
+        this.placeholder.isMounted = false
 
+        this.style( {
+            "display": "flex",
+            "flex-direction": "column",
+            ...divStyles
+        } )
         const header = new Container()
             .append(
                 this.#select,
@@ -60,23 +61,16 @@ export class Box extends Container {
                 "display": "flex",
                 "justify-content": "space-between"
             } )
-        header.className = "box-header"
 
         this.append(
             header,
             this.#form,
-            this.#logicOperationPlaceHolder
+            this.placeholder
         )
+    }
 
+    render() {
+        this.#compose()
+        return super.render();
     }
 }
-
-export const
-    box = new Box()
-
-console
-    .log( box
-
-        instanceof
-        Component
-    )

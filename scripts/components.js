@@ -1,46 +1,29 @@
-/**
- * Represents a reusable component for creating and managing DOM elements.
- */
 export class Component {
     #tag;
 
-    /**
-     * Create a new Component instance.
-     * @param {Object} options - Component options.
-     * @param {string} options.tag - The HTML tag name for the root element.
-     * @method {void} text - aasd
-     */
     constructor({ tag }) {
         // Private property to store the tag name.
         this.#tag = tag;
 
+        this.parent = null;
+        this.adjacentChildren = new Map();
+
         // Create the root element with the specified tag.
         this.element = document.createElement( this.#tag );
-
-        // Add a mouseover event listener to trigger handleHover.
-        this.element.addEventListener( "mouseover", () => {
-            this.handleHover();
-        } );
+        this.isMounted = true
 
         // Initialize properties.
         this.onHoverCallback = null;
-        this.adjacentChildren = new Map();
     }
 
-    /**
-     * Set the text content of the component's root element.
-     * @param {string} string - The text content to set.
-     * @returns {Component} - The Component instance for method chaining.
-     */
-    set text(string) {
-        this.element.innerText = string;
-        return this;
+    setParent(parent) {
+        this.parent = parent
     }
 
-    /**
-     * Set the id attribute of the component's root element.
-     * @param {string} id - The id value to set (or remove if empty).
-     */
+    set text(text) {
+        this.element.innerText = String( text );
+    }
+
     set id(id) {
         if (!id) {
             this.element.removeAttribute( "id" );
@@ -49,10 +32,6 @@ export class Component {
         }
     }
 
-    /**
-     * Set the class attribute of the component's root element.
-     * @param {string} className - The class name to set (or remove if empty).
-     */
     set className(className) {
         if (!className) {
             this.element.removeAttribute( "class" );
@@ -61,29 +40,28 @@ export class Component {
         }
     }
 
-    /**
-     * Append child elements to the component's root element.
-     * @param {...(Component|HTMLElement)} args - Child elements to append.
-     * @returns {Component} - The Component instance for method chaining.
-     */
     append(...args) {
-        args.forEach( (child, i) => {
+
+        let performAppend = (child) => {
             this.adjacentChildren.set( child, child );
 
             if (child instanceof Component) {
-                this.element.appendChild( child.mount() );
+
+                child.setParent( this );
+
+                if (child.isMounted) {
+                    this.element.appendChild( child.render() );
+                }
+
             } else {
                 this.element.appendChild( child );
             }
-        } );
+        };
+
+        args.forEach( performAppend );
         return this;
     }
 
-    /**
-     * Remove child elements from the component's root element.
-     * @param {...(Component|HTMLElement)} args - Child elements to remove.
-     * @returns {Component} - The Component instance for method chaining.
-     */
     remove(...args) {
         args.forEach( (child) => {
             if (child instanceof Component) {
@@ -95,11 +73,6 @@ export class Component {
         return this;
     }
 
-    /**
-     * Apply inline CSS styles to the component's root element.
-     * @param {Object} stylesDict - A dictionary of CSS styles.
-     * @returns {Component} - The Component instance for method chaining.
-     */
     style(stylesDict) {
         const stringStyles = Object.keys( stylesDict )
             .map( (style) => style + ":" + stylesDict[style] )
@@ -108,38 +81,44 @@ export class Component {
         return this;
     }
 
-    /**
-     * Set a callback function to be called on mouseover.
-     * @param {Function} callback - The callback function to set.
-     * @returns {Component} - The Component instance for method chaining.
-     */
     onHover(callback) {
         this.onHoverCallback = callback;
         return this;
     }
 
-    /**
-     * Handle the mouseover event by calling the onHoverCallback if it is set.
-     */
     handleHover() {
         if (typeof this.onHoverCallback === "function") {
             this.onHoverCallback();
         }
     }
 
-    /**
-     * Mount the component by returning its root element.
-     * @returns {HTMLElement} - The root element of the component.
-     */
     mount() {
-        return this.element;
+        const siblings = this.parent.adjacentChildren
+        if (siblings.size < 2) {
+            this.parent.element.appendChild( this.render() )
+        } else {
+            // get upper neighbor
+            const neighborsArray = Array.from( siblings.keys() )
+            const neighborIndex = neighborsArray.indexOf( this ) - 1
+            siblings.get( neighborsArray[neighborIndex] ).element.insertAdjacentElement( "afterend", this.render() )
+        }
     }
 
-    /**
-     * Unmount the component by removing its root element from the DOM.
-     */
     unmount() {
+        this.isMounted = false
         this.element.remove();
+    }
+
+    #compose() {
+        // Add a mouseover event listener to trigger handleHover.
+        this.element.addEventListener( "mouseover", () => {
+            this.handleHover();
+        } );
+    }
+
+    render() {
+        this.#compose()
+        return this.element
     }
 }
 
@@ -163,29 +142,9 @@ export class Container extends Component {
 
 
 export class Typography extends Component {
-    constructor({ variant = "p", text = "" } = {}) {
+    constructor({ variant = "p", text } = {}) {
         super( { tag: variant } );
         this.text = text
-    }
-}
-
-export class Button extends Component {
-    constructor({ text = "Кнопка" } = {}) {
-        super( { tag: "button" } );
-        this.text = text
-        this.element.addEventListener( "click", this.handleClick.bind( this ) )
-    }
-
-    onClick(callback) {
-        this.onClickCallback = callback;
-        return this
-    }
-
-    handleClick(event) {
-        // Call the onChange callback if it is set
-        if (typeof this.onClickCallback === "function") {
-            this.onClickCallback( event );
-        }
     }
 }
 
@@ -199,7 +158,15 @@ export class Input extends Component {
         this.onChangeCallback = null;
         this.element.addEventListener( "input", this.handleInputChange.bind( this ) )
         this.inputProps = inputProps
+    }
+    disable() {
+        this.element.setAttribute("disabled", "")
+        return this
+    }
 
+    enable() {
+        this.element.removeAttribute("disabled")
+        return this
     }
 
     set inputProps(props) {
@@ -243,6 +210,29 @@ export class Input extends Component {
     }
 }
 
+
+export class Button extends Input {
+    constructor({ text = "Кнопка" } = {}) {
+        super( { tag: "button" } );
+        this.text = text
+        this.element.addEventListener( "click", this.handleClick.bind( this ) )
+        this.className = "mui-btn mui-btn--small mui-btn--primary"
+    }
+
+    onClick(callback) {
+        this.onClickCallback = callback;
+        return this
+    }
+
+    handleClick(event) {
+        // Call the onChange callback if it is set
+        if (typeof this.onClickCallback === "function") {
+            this.onClickCallback( event );
+        }
+    }
+}
+
+
 export class SelectField extends Input {
     constructor({ name, value, options, ...inputProps }) {
         super( { tag: "select", name, value, ...inputProps } );
@@ -260,4 +250,12 @@ export class SelectField extends Input {
         } )
     }
 
+}
+
+export const createRoot = (element) => {
+    const rootComponent = new Component( { tag: "div" } )
+    rootComponent.id = "AppRoot"
+    rootComponent.setParent( element )
+    element.appendChild( rootComponent.render() )
+    return rootComponent
 }

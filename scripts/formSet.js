@@ -1,46 +1,35 @@
-const formSet = {
+export const formSet = {
+    // key: props
     city: {
         label: "Город",
-        type: "radio",
+        type: "select",
+        // если селект, то и так понятно, что должны быть включены варианты указан/неуказан и собсна сам выбор
         options: [
-            {
-                value: true,
-                optionLabel: "Указан"
-            },
-            {
-                value: false,
-                optionLabel: "Не указан"
-            },
-            {
-                value: "value",
-                optionLabel: "Выбрать город"
-            }
+            { msk: "Москва" },
+            { stu: "Ступино" },
+            { someCity: "Село Кукуево" }
         ]
     },
     gender: {
         label: "Пол",
-        type: "dynamicRadio",
+        type: "select",
         options: [
-            {
-                value: true,
-                optionLabel: "Указан"
-            },
-            {
-                value: false,
-                optionLabel: "Не указан"
-            },
-            {
-                value: "value",
-                optionLabel: "Выбрать пол",
-                // select: url можно дернуть и также присвоить список
-                // или написать компонент который сам будет дергать, это изи
-                select: [{
-                    // id: value
-                    someUuid4: "Боевой вертолёт",
-                    thai_id_123: "То-ли девочка, а то-ли виденье",
-                    akjsdhf_ussr_1937: "Коммунист"
-                }]
-            }
+            // id: value
+            { someUuid4: "Боевой вертолёт" },
+            { thai_id_123: "То-ли девочка, а то-ли виденье" },
+            { akjsdhf_ussr_1937: "Коммунист" }
         ]
+    },
+    phone: {
+        label: "Есть Телефон?",
+        type: "checkbox"
+    },
+    hasSomething: {
+        label: "Есть анкета?",
+        type: "checkbox"
+    },
+    isActive: {
+        label: "Активный?", // или пассивный?
+        type: "checkbox"
     }
 }

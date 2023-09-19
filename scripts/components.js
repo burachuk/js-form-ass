@@ -1,3 +1,5 @@
+import { createOption } from "./utils.js";
+
 export class Component {
     #tag;
 
@@ -43,6 +45,7 @@ export class Component {
     append(...args) {
 
         let performAppend = (child) => {
+            // это значит, что дважды один референс не присоединить
             this.adjacentChildren.set( child, child );
 
             if (child instanceof Component) {
@@ -104,8 +107,12 @@ export class Component {
         }
     }
 
+    update() {
+        this.mount()
+    }
+
     unmount() {
-        this.isMounted = false
+        // this.isMounted = false
         this.element.remove();
     }
 
@@ -114,6 +121,9 @@ export class Component {
         this.element.addEventListener( "mouseover", () => {
             this.handleHover();
         } );
+        // в компосе нельзя создавать new через присвоение к переменной
+        // только аппенд, создание вынести в конструктор или в геттер
+        // иначе маунт неверно поймет с чем работать, тк реф будет другой
     }
 
     render() {
@@ -159,13 +169,14 @@ export class Input extends Component {
         this.element.addEventListener( "input", this.handleInputChange.bind( this ) )
         this.inputProps = inputProps
     }
+
     disable() {
-        this.element.setAttribute("disabled", "")
+        this.element.setAttribute( "disabled", "" )
         return this
     }
 
     enable() {
-        this.element.removeAttribute("disabled")
+        this.element.removeAttribute( "disabled" )
         return this
     }
 
@@ -234,21 +245,18 @@ export class Button extends Input {
 
 
 export class SelectField extends Input {
-    constructor({ name, value, options, ...inputProps }) {
-        super( { tag: "select", name, value, ...inputProps } );
+    constructor({ name, initValue, options, ...inputProps } = {}) {
+        super( { tag: "select", name, initValue, ...inputProps } );
         this.dummyOption = new Input( { tag: "option", value: undefined } )
         this.dummyOption.text = "-----"
         this.options = options
     }
 
     set options(optionsArray) {
-        this.append( this.dummyOption )
-        optionsArray.forEach( ([key, value]) => {
-            const optionElement = new Input( { tag: "option", value: key } )
-            optionElement.text = value
-            this.append( optionElement )
-        } )
+        console.log( "optionsArray", optionsArray )
+        !!optionsArray && this.append( this.dummyOption, ...optionsArray.map(createOption) )
     }
+
 
 }
 
